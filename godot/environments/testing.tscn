@@ -1,0 +1,58 @@
+[gd_scene load_steps=8 format=3 uid="uid://b5wjgul7pkkdy"]
+
+[ext_resource type="Texture2D" uid="uid://cgwjjwr5b0r0c" path="res://icon.svg" id="1_6rvnt"]
+[ext_resource type="PackedScene" uid="uid://c521mdmwjj7ek" path="res://player/player.tscn" id="1_ms6k8"]
+[ext_resource type="PackedScene" uid="uid://c8kbj1y1j5fny" path="res://environment_assets/wall.tscn" id="2_ose8b"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0ogvk"]
+size = Vector3(60, 2, 60)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4qxd7"]
+albedo_texture = ExtResource("1_6rvnt")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1sbsi"]
+material = SubResource("StandardMaterial3D_4qxd7")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s1hi2"]
+albedo_texture = ExtResource("1_6rvnt")
+
+[node name="Testing" type="Node"]
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_0ogvk")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 1, 0)
+mesh = SubResource("PlaneMesh_1sbsi")
+surface_material_override/0 = SubResource("StandardMaterial3D_s1hi2")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.762328, 0.181502, -0.62122, 0.643166, -0.105567, 0.758415, 0.0720729, -0.977708, -0.197213, 0, 15.5518, 0)
+shadow_enabled = true
+
+[node name="MainCamera" type="Camera3D" parent="."]
+
+[node name="Manager" type="Manager" parent="."]
+
+[node name="Player" parent="Manager" instance=ExtResource("1_ms6k8")]
+air_dash_distance = 30.0
+num_basic_ground_attacks = 3
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.60433, 0)
+
+[node name="Walls" type="Node" parent="."]
+
+[node name="Wall" parent="Walls" instance=ExtResource("2_ose8b")]
+transform = Transform3D(59.3382, 0, 0, 0, 23.1925, 0, 0, 0, 1, 0, 8.7438, 29.5)
+visible = false
+
+[node name="Wall2" parent="Walls" instance=ExtResource("2_ose8b")]
+transform = Transform3D(5, 0, 0, 0, 7, 0, 0, 0, 1, -9.215, 3.5, 7.331)
+
+[node name="Wall3" parent="Walls" instance=ExtResource("2_ose8b")]
+transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 60, -30, 3.5, 0)
+
+[node name="Wall4" parent="Walls" instance=ExtResource("2_ose8b")]
+transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 60, 30, 3.5, 0)

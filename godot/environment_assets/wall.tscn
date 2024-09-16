@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://c8kbj1y1j5fny"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8f1mo"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_em2e0"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_i6yh1"]
+
+[node name="Wall" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_8f1mo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_em2e0")
+mesh = SubResource("BoxMesh_i6yh1")
+skeleton = NodePath("../CollisionShape3D")
