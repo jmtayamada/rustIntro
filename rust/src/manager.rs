@@ -50,10 +50,10 @@ impl INode for Manager {
                 "dash": input.is_action_just_pressed("dash".into()),
                 "pause": input.is_action_just_pressed("jump".into()),
                 "attack": input.is_action_just_pressed("attack".into()),
+                "hold_attack": input.is_action_pressed("attack".into()),
             }, 
             delta
         );
-        player_node.rotate_pivot();
     }
 }
 

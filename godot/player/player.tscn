@@ -323,6 +323,7 @@ shape = SubResource("BoxShape3D_5gotc")
 
 [node name="Attack1" type="Attack" parent="Pivot/GroundAttacks"]
 attack_length = 1.0
+chain_number = 1
 monitoring = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Pivot/GroundAttacks/Attack1"]
@@ -331,6 +332,7 @@ shape = SubResource("BoxShape3D_5gotc")
 
 [node name="Attack2" type="Attack" parent="Pivot/GroundAttacks"]
 attack_length = 1.0
+chain_number = 2
 monitoring = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Pivot/GroundAttacks/Attack2"]
@@ -341,6 +343,7 @@ shape = SubResource("BoxShape3D_5gotc")
 
 [node name="Attack0" type="Attack" parent="Pivot/AirAttacks"]
 ground_attack = false
+movement_multiplyer = 1.0
 monitoring = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Pivot/AirAttacks/Attack0"]
@@ -356,6 +359,9 @@ one_shot = true
 [node name="AirDashTime" type="Timer" parent="."]
 one_shot = true
 
+[node name="UpDashTime" type="Timer" parent="."]
+one_shot = true
+
 [node name="GroundDashTime" type="Timer" parent="."]
 one_shot = true
 
@@ -368,11 +374,14 @@ autoplay = "test"
 [connection signal="attack_ended" from="Pivot/GroundAttacks/Attack0" to="." method="end_attack"]
 [connection signal="chain_ended" from="Pivot/GroundAttacks/Attack0" to="." method="end_chain"]
 [connection signal="attack_ended" from="Pivot/GroundAttacks/Attack1" to="." method="end_attack"]
+[connection signal="attack_started" from="Pivot/GroundAttacks/Attack1" to="Pivot/GroundAttacks/Attack0" method="reset_chain_timer"]
 [connection signal="chain_ended" from="Pivot/GroundAttacks/Attack1" to="." method="end_chain"]
 [connection signal="attack_ended" from="Pivot/GroundAttacks/Attack2" to="." method="end_attack"]
+[connection signal="attack_started" from="Pivot/GroundAttacks/Attack2" to="Pivot/GroundAttacks/Attack1" method="reset_chain_timer"]
 [connection signal="chain_ended" from="Pivot/GroundAttacks/Attack2" to="." method="end_chain"]
 [connection signal="attack_ended" from="Pivot/AirAttacks/Attack0" to="." method="end_attack"]
 [connection signal="chain_ended" from="Pivot/AirAttacks/Attack0" to="." method="end_chain"]
 [connection signal="timeout" from="DashRefresh" to="." method="increase_dash_counter"]
 [connection signal="timeout" from="AirDashTime" to="." method="disable_dash_state"]
+[connection signal="timeout" from="UpDashTime" to="." method="disable_dash_state"]
 [connection signal="timeout" from="GroundDashTime" to="." method="disable_dash_state"]

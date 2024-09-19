@@ -15,6 +15,10 @@ pub struct Attack {
     ground_attack: bool,
     #[export]
     chain_length: f64,
+    #[export]
+    chain_number: i16,
+    #[export]
+    movement_multiplyer: f32,
 
     base: Base<Area3D>,
 }
@@ -28,6 +32,8 @@ impl IArea3D for Attack {
             chargeable: false,
             ground_attack: true,
             chain_length: 0.25,
+            chain_number: 0,
+            movement_multiplyer: 0.0,
 
             base,
         }
@@ -55,18 +61,16 @@ impl IArea3D for Attack {
 #[godot_api]
 impl Attack {
     #[func]
+    pub fn reset_chain_timer(&mut self) {
+        self.base_mut().get_node_as::<Timer>("AttackChain").stop();
+    }
+
+    #[func]
     pub fn begin_attack(&mut self) {
-        let mut chain_timer = self.base_mut().get_node_as::<Timer>("AttackChain");
-
-        chain_timer.stop();
-
-        if chain_timer.get_time_left() == 0.0 {
-            godot_print!("timer reset");
-        }
+        self.base_mut().emit_signal("attack_started".into(), &[]);
 
         self.base_mut().set_monitoring(true);
-        let mut timer = self.base_mut().get_node_as::<Timer>("AttackLength");
-        timer.start();
+        self.base_mut().get_node_as::<Timer>("AttackLength").start();
     }
 
     #[func]
@@ -74,13 +78,11 @@ impl Attack {
         self.base_mut().set_monitoring(false);
         self.base_mut().emit_signal("attack_ended".into(), &[]);
 
-        let mut chain_timer = self.base_mut().get_node_as::<Timer>("AttackChain");
-        chain_timer.start();
+        self.base_mut().get_node_as::<Timer>("AttackChain").start();
     }
 
     #[func]
     pub fn end_chain(&mut self) {
-        godot_print!("end chain");
         let boolean: bool = self.ground_attack;
         self.base_mut().emit_signal("chain_ended".into(), &[boolean.to_variant()]);
     }
@@ -90,4 +92,7 @@ impl Attack {
 
     #[signal]
     fn chain_ended(ground_attack: bool);
+
+    #[signal]
+    fn attack_started();
 }

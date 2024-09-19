@@ -24,6 +24,10 @@ pub struct Player {
     #[export]
     air_dash_time: f64,
     #[export]
+    up_dash_distance: f32,
+    #[export]
+    up_dash_time: f64,
+    #[export]
     ground_dash_distance: f32,
     #[export]
     ground_dash_time: f64,
@@ -34,6 +38,7 @@ pub struct Player {
     dash_available: i8,
     // is_dashing: bool,
     air_dash_speed: f32,
+    up_dash_speed: f32,
     ground_dash_speed: f32,
 
     #[export]
@@ -51,7 +56,9 @@ pub struct Player {
 
     last_facing_direction: Vector3,
 
-    current_state: String,  // idle, moving, ground_dashing, air_dashing, jumping, falling, ground_attacking, air_attacking
+    current_state: String,  // idle, moving, ground_dashing, air_dashing, up_dashing, jumping, falling, ground_attacking, air_attacking
+
+    stat_modifiers: Dictionary,
 
     base: Base<CharacterBody3D>,
 }
@@ -71,6 +78,8 @@ impl ICharacterBody3D for Player {
 
             air_dash_distance: 15.0,
             air_dash_time: 0.25,
+            up_dash_distance: 15.0,
+            up_dash_time: 0.25,
             ground_dash_distance: 15.0,
             ground_dash_time: 0.25,
             max_dash_amount: 5,
@@ -78,6 +87,7 @@ impl ICharacterBody3D for Player {
             // is_dashing: false,
             dash_cooldown: 0.5,
             air_dash_speed: 0.0,
+            up_dash_speed: 0.0,
             ground_dash_speed: 0.0,
 
             max_hp: 50,
@@ -94,6 +104,24 @@ impl ICharacterBody3D for Player {
 
             last_facing_direction: Vector3::from_tuple((1.0, 0.0, 1.0)),
 
+            stat_modifiers: dict! {
+                "attack": dict! {
+                    "base": 1.0,
+                },
+                "speed": dict! {
+                    "base": 1.0,
+                },
+                "armour": dict! {
+                    "base": 1.0,
+                },
+                "health": dict! {
+                    "base": 1.0,
+                },
+                "jump": dict! {
+                    "base": 1.0,
+                },
+            },
+
             base,
         }
     }
@@ -106,6 +134,9 @@ impl ICharacterBody3D for Player {
 
         let air_dash_time = self.air_dash_time;
         self.base_mut().get_node_as::<Timer>("AirDashTime").set_wait_time(air_dash_time);
+
+        let up_dash_time = self.up_dash_time;
+        self.base_mut().get_node_as::<Timer>("UpDashTime").set_wait_time(up_dash_time);
 
         let ground_dash_time = self.ground_dash_time;
         self.base_mut().get_node_as::<Timer>("GroundDashTime").set_wait_time(ground_dash_time);
@@ -132,9 +163,9 @@ impl Player {
         self.jump_velocity = self.jump_gravity * self.jump_peak_time;
         self.speed = self.jump_distance/(self.jump_peak_time + self.jump_fall_time);
         self.air_dash_speed = self.air_dash_distance/(self.air_dash_time as f32);
+        self.up_dash_speed = self.up_dash_distance/(self.up_dash_time as f32);
         self.ground_dash_speed = self.ground_dash_distance/(self.ground_dash_time as f32);
     }
-
 
     // code for dealing with dash
     #[func]
@@ -169,7 +200,15 @@ impl Player {
 
         velocity = self.dash(velocity, input.at("dash").to());
 
-        velocity = self.basic_attack(input.at("attack").to(), self.base().is_on_floor(), velocity);
+        self.basic_attack(input.at("attack").to(), input.at("hold_attack").to(), self.base().is_on_floor());
+
+        // handle multiplyers
+        let mut speed_multiplyer: f32 = 1.0;
+        for (_key, value) in Dictionary::from_variant(&self.stat_modifiers.at("speed")).iter_shared() {
+            speed_multiplyer *= f32::from_variant(&value);
+        }
+        velocity.x *= speed_multiplyer;
+        velocity.z *= speed_multiplyer;
 
         {
             let y_holder = velocity.y;
@@ -183,6 +222,8 @@ impl Player {
 
         self.base_mut().set_velocity(velocity);
         self.base_mut().move_and_slide();
+
+        self.rotate_pivot();
 
         self.animations();
     }
@@ -221,6 +262,9 @@ impl Player {
             animation.push_str(&num);
             animation_player.set_speed_scale(1.0);
             animation_player.play_ex().name(animation.into()).done();
+        } else if self.current_state == "up_dashing" {
+            animation_player.set_speed_scale(4.0);
+            animation_player.play_ex().name("air_dash".into()).done();
         }
         
     }
@@ -238,8 +282,18 @@ impl Player {
                 self.modify_state_bypass_dash("ground_dashing".to_string());
                 self.base_mut().get_node_as::<Timer>("GroundDashTime").start();
             } else {
-                self.modify_state_bypass_dash("air_dashing".to_string());
-                self.base_mut().get_node_as::<Timer>("AirDashTime").start();
+                if vector.x == 0.0 && vector.z == 0.0 {
+                    if self.dash_available > 0 {
+                        self.dash_available -= 1;
+                        self.modify_state_bypass_dash("up_dashing".to_string());
+                        self.base_mut().get_node_as::<Timer>("UpDashTime").start();
+                    } else {
+                        self.dash_available += 1;
+                    }
+                } else {
+                    self.modify_state_bypass_dash("air_dashing".to_string());
+                    self.base_mut().get_node_as::<Timer>("AirDashTime").start();
+                }
             }
         }
 
@@ -255,6 +309,8 @@ impl Player {
             vector.y = y;
             vector.x *= self.air_dash_speed;
             vector.z *= self.air_dash_speed;
+        } else if self.current_state.eq("up_dashing") {
+            vector.y = self.up_dash_speed;
         }
 
         if self.dash_available < self.max_dash_amount && self.base().get_node_as::<Timer>("DashRefresh").is_stopped() {
@@ -312,40 +368,45 @@ impl Player {
 
     // combat functions
     #[func]
-    fn basic_attack(&mut self, attack: bool, on_floor: bool, velocity: Vector3) -> Vector3 {
-        let mut velocity = velocity;
-        if attack && !self.current_state.eq("ground_attacking") && !self.current_state.eq("air_attacking") {
+    fn basic_attack(&mut self, attack: bool, attack_hold: bool, on_floor: bool) {
+        // get attack node
+        let mut path: String = "Pivot/".to_string();
+        path.push_str(
             if on_floor {
-                self.modify_state_bypass_dash("ground_attacking".into());
-
-                let mut path: String = "Pivot/GroundAttacks/Attack".to_string();
-                let attack_string: String = self.current_basic_ground_attack.to_string();
-                path.push_str(&attack_string);
-                let mut _node = self.base_mut().get_node_as::<Attack>(path);
-                let mut attack_node = _node.bind_mut();
-                attack_node.begin_attack();
+                "GroundAttacks/Attack"
             } else {
-                self.modify_state_bypass_dash("air_attacking".into());
+                "AirAttacks/Attack"
+            }
+        );
+        let attack_string: String;
+        if on_floor {
+            attack_string = self.current_basic_ground_attack.to_string();
+        } else {
+            attack_string = self.current_basic_air_attack.to_string();
+        }
+        path.push_str(&attack_string);
+        let mut _node = self.base_mut().get_node_as::<Attack>(path);
+        let mut attack_node = _node.bind_mut();
 
-                let mut path: String = "Pivot/AirAttacks/Attack".to_string();
-                let attack_string: String = self.current_basic_air_attack.to_string();
-                path.push_str(&attack_string);
-                let mut _node = self.base_mut().get_node_as::<Attack>(path);
-                let mut attack_node = _node.bind_mut();
-                attack_node.begin_attack();
+        if attack_node.get_chargeable() {
+
+        } else {
+            if attack && !self.current_state.eq("ground_attacking") && !self.current_state.eq("air_attacking") {
+                Dictionary::from_variant(&self.stat_modifiers.at("speed")).set("attack_multiplyer", attack_node.get_movement_multiplyer());
+                if on_floor {
+                    self.modify_state_bypass_dash("ground_attacking".into());
+                    attack_node.begin_attack();
+                } else {
+                    self.modify_state_bypass_dash("air_attacking".into());
+                    attack_node.begin_attack();
+                }
             }
         }
-
-        if self.current_state.eq("ground_attacking") || self.current_state.eq("air_attacking") {
-            velocity.x = 0.0;
-            velocity.z = 0.0;
-        }
-
-        velocity
     }
 
     #[func]
     pub fn end_attack(&mut self) {
+        Dictionary::from_variant(&self.stat_modifiers.at("speed")).set("attack_multiplyer", 1.0);
         if self.base_mut().is_on_floor() {
             self.modify_state_bypass_dash("idle".into());
             if self.current_basic_ground_attack < self.num_basic_ground_attacks {
@@ -375,7 +436,7 @@ impl Player {
     // state handler
     #[func]
     pub fn modify_state(&mut self, state: String) {
-        if !self.current_state.eq("air_dashing") && !self.current_state.eq("ground_dashing") && !self.current_state.eq("ground_attacking") && !self.current_state.eq("air_attacking"){
+        if !self.current_state.eq("air_dashing") && !self.current_state.eq("up_dashing") && !self.current_state.eq("ground_dashing") && !self.current_state.eq("ground_attacking") && !self.current_state.eq("air_attacking"){
             self.current_state = state;
         }
     }
@@ -397,7 +458,7 @@ impl Player {
     }
 
     #[func]
-    pub fn rotate_pivot(&mut self) {
+    fn rotate_pivot(&mut self) {
         if self.last_facing_direction.cross(Vector3::from_tuple((0.0, 1.0, 0.0))) != Vector3::from_tuple((0.0, 0.0, 0.0)) {
             let mut pivot_node = self.base_mut().get_node_as::<Node3D>("Pivot");
             pivot_node.set_basis(Basis::new_looking_at(self.last_facing_direction, Vector3::from_tuple((0.0, 1.0, 0.0)), true));
