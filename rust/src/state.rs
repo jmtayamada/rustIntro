@@ -65,17 +65,20 @@ impl State {
     }
 
     #[func(virtual)]
-    pub fn process_input(&mut self, _event: Gd<InputEvent>) -> Option<Gd<State>> {
-        None
+    pub fn process_input(&mut self, _event: Gd<InputEvent>) {
     }
 
     #[func(virtual)]
-    pub fn process_frame(&mut self, _delta: f64) -> Option<Gd<State>> {
-        None
+    pub fn process_frame(&mut self, _delta: f64) {
+        if let Some(animation_player) = self.animation_player.as_mut() {
+            animation_player.play();
+        }
     }
 
     #[func(virtual)]
-    pub fn process_physics(&mut self, _delta: f64) -> Option<Gd<State>> {
-        None
+    pub fn process_physics(&mut self, _delta: f64) {
     }
+
+    #[signal]
+    fn change_state(state: Option<Gd<State>>);
 }

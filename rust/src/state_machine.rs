@@ -66,39 +66,42 @@ impl StateMachine {
     #[func]
     pub fn process_physics(&mut self, delta: f64) {
 
-        let mut new_state: Option<Gd<State>> = None;
+        // let mut new_state: Option<Gd<State>> = None;
         if let Some(state) = self.current_state.as_mut() {
-            new_state = state.call_deferred("_process_physics".into(), &[delta.to_variant()]).to();
+            state.call_deferred("_process_physics".into(), &[delta.to_variant()]);
+            // new_state = state.bind_mut().process_physics(delta);
         }
 
-        if let Some(state) = new_state {
-            self.change_state(state);
-        }
+        // if let Some(state) = new_state {
+        //     self.change_state(state);
+        // }
     }
 
     #[func]
     pub fn process_input(&mut self, event: Gd<InputEvent>) {
 
-        let mut new_state: Option<Gd<State>> = None;
+        // let mut new_state: Option<Gd<State>> = None;
         if let Some(state) = self.current_state.as_mut() {
-            new_state = state.bind_mut().process_input(event);
+            state.call_deferred("_process_input".into(), &[event.to_variant()]);
+            // new_state = state.bind_mut().process_input(event);
         }
 
-        if let Some(state) = new_state {
-            self.change_state(state);
-        }
+        // if let Some(state) = new_state {
+        //     self.change_state(state);
+        // }
 
     }
 
     #[func]
     pub fn process_frame(&mut self, delta: f64) {
 
-        let mut new_state: Option<Gd<State>> = None;
+        // let mut new_state: Option<Gd<State>> = None;
         if let Some(state) = self.current_state.as_mut() {
-            new_state = state.bind_mut().process_frame(delta);
+            state.call_deferred("_process_frame".into(), &[delta.to_variant()]);
+            // new_state = state.bind_mut().process_frame(delta);
         }
-        if let Some(state) = new_state {
-            self.change_state(state);
-        }
+        // if let Some(state) = new_state {
+        //     self.change_state(state);
+        // }
     }
 }

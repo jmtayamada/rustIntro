@@ -34,7 +34,7 @@ transform = Transform3D(0.762328, 0.181502, -0.62122, 0.643166, -0.105567, 0.758
 shadow_enabled = true
 
 [node name="MainCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.6509, 28.9076)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.08637, 30.8058)
 
 [node name="Walls" type="Node" parent="."]
 
@@ -52,3 +52,4 @@ transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 60, -30, 3.5, 0)
 transform = Transform3D(1, 0, 0, 0, 7, 0, 0, 0, 60, 30, 3.5, 0)
 
 [node name="PlayerTest" parent="." instance=ExtResource("4_0s8a6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.2466, 7.3578, 7.17511)

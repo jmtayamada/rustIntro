@@ -2,8 +2,8 @@ extends State
 
 @export
 var idle_state: State
-#@export
-#var fall_state: State
+@export
+var fall_state: State
 #@export
 #var jump_state: State
 
@@ -13,19 +13,23 @@ func _enter() -> void:
 func _exit() -> void:
 	pass
 	
-func _process_physics(delta: float) -> State:
+func _process_frame(_delta: float):
+	pass
 	
+func _process_input(_event):
+	pass
+	
+func _process_physics(delta: float):
 	var velocity = controller._get_horizontal_movement() * parent_node.speed
-	velocity.y -= parent_node.fall_gravity
-	parent_node.velocity = velocity
-	
-	#if parent_node.velocity.y < 0:
-		#return fall_state
+	parent_node.velocity.x = velocity.x
+	parent_node.velocity.z = velocity.z
+	parent_node.velocity.y -= parent_node.fall_gravity*delta
 
 	parent_node.move_and_slide()
 	
 	if parent_node.is_on_floor():
-		if parent_node.velocity.is_zero_approx():
-			return idle_state
-	
-	return null
+		if velocity.is_zero_approx():
+			change_state.emit(idle_state)
+	else:
+		if parent_node.velocity.y < 0:
+			change_state.emit(fall_state)
