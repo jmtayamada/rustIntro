@@ -1,15 +1,15 @@
 use godot::prelude::*;
-use godot::classes::{InputEvent, Node};
-
-use crate::player::Player;
+use godot::classes::{AnimationPlayer, CharacterBody3D, InputEvent, Node};
 
 #[derive(GodotClass)]
-#[class(base=Node)] // no_init
+#[class(base=Node)]
 pub struct State {
     #[export]
     animation_name: GString,
     #[var]
-    parent_node_path: NodePath,
+    parent_node: Option<Gd<CharacterBody3D>>,
+    #[var]
+    animation_player: Option<Gd<AnimationPlayer>>,
     base: Base<Node>
 }
 
@@ -19,7 +19,8 @@ impl INode for State {
     fn init(base: Base<Node>) -> Self {
         Self { 
             animation_name: "".into(), 
-            parent_node_path: "".into(), 
+            parent_node: None, 
+            animation_player: None,
             base
         }
     }
@@ -27,32 +28,28 @@ impl INode for State {
 
 #[godot_api]
 impl State {
-    #[func]
-    pub fn parent_node(&mut self) -> Option<Gd<Player>> {
-        let string = self.parent_node_path.clone();
-        Some(self.base_mut().get_node_as::<Player>(string))
-    }
 
     #[func(virtual)]
-    pub fn set_parent_node_self(&mut self, path_to_parent: NodePath) {
-        self.parent_node_path = path_to_parent;
+    pub fn set_parameters(&mut self, input_node: Option<Gd<CharacterBody3D>>, animation_player_node: Option<Gd<AnimationPlayer>>) {
+        self.parent_node = input_node;
+        self.animation_player = animation_player_node;
     }
 
     #[func(virtual)]
     pub fn enter(&mut self) {
-        if let Some(parent) = self.parent_node().as_mut() {
-            parent.bind_mut().play_animation(self.animation_name.clone());
+        if let Some(animation_player) = self.animation_player.as_mut() {
+            animation_player.play_ex().name(self.animation_name.clone().into()).done();
         } else {
-            godot_error!("No parent found")
+            godot_error!("No animation player")
         }
     }
 
     #[func]
     pub fn enter_default(&mut self) {
-        if let Some(parent) = self.parent_node().as_mut() {
-            parent.bind_mut().play_animation(self.animation_name.clone());
+        if let Some(animation_player) = self.animation_player.as_mut() {
+            animation_player.play_ex().name(self.animation_name.clone().into()).done();
         } else {
-            godot_error!("No parent found")
+            godot_error!("No animation player")
         }
     }
 

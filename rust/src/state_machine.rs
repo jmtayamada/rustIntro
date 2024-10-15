@@ -1,6 +1,6 @@
 use godot::obj::WithBaseField;
 use godot::prelude::*;
-use godot::classes::{InputEvent, Node, CharacterBody3D};
+use godot::classes::{AnimationPlayer, CharacterBody3D, InputEvent, Node};
 
 use crate::state::State;
 
@@ -29,12 +29,11 @@ impl INode for StateMachine {
 impl StateMachine {
 
     #[func]
-    pub fn initialize(&mut self, parent: Gd<CharacterBody3D>) {
+    pub fn initialize(&mut self, parent: Gd<CharacterBody3D>, animation_player: Option<Gd<AnimationPlayer>>) {
         for node in self.base_mut().get_children().iter_shared() {
-            let path = node.get_path_to(parent.clone());
             {
                 let mut child = node.cast::<State>();
-                child.bind_mut().set_parent_node_self(path);
+                child.bind_mut().set_parameters(Some(parent.clone()), animation_player.clone());
             }
         }
 

@@ -72,7 +72,7 @@ impl ICharacterBody3D for Player {
         {
             let _self = self.base().clone();
             match self.state_machine.as_mut() {
-                Some(state_machine) => {state_machine.bind_mut().initialize(_self.cast())},
+                Some(state_machine) => {state_machine.bind_mut().initialize(_self.cast(), self.animations.clone())},
                 None => {godot_error!("state machine not found")},
             }
         }
@@ -119,12 +119,5 @@ impl Player {
         self.fall_gravity = (2.0 * self.jump_height)/(self.jump_fall_time.powf(2.0));
         self.jump_velocity = self.jump_gravity * self.jump_peak_time;
         self.jump_speed = self.jump_distance/(self.jump_peak_time + self.jump_fall_time);
-    }
-
-    #[func]
-    pub fn play_animation(&mut self, animation_name: GString) {
-        if let Some(animation_player) = self.animations.as_mut() {
-            animation_player.play_ex().name(animation_name.clone().into()).done();
-        }
     }
 }
