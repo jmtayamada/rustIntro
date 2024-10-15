@@ -9,7 +9,6 @@ pub struct State {
     #[export]
     animation_name: GString,
     #[var]
-    // parent_node: Option<Gd<Player>>,
     parent_node_path: NodePath,
     base: Base<Node>
 }

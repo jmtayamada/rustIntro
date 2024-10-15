@@ -34,6 +34,7 @@ transform = Transform3D(0.762328, 0.181502, -0.62122, 0.643166, -0.105567, 0.758
 shadow_enabled = true
 
 [node name="MainCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.6509, 28.9076)
 
 [node name="Walls" type="Node" parent="."]
 
