@@ -1,6 +1,8 @@
 use godot::prelude::*;
 use godot::classes::{AnimationPlayer, CharacterBody3D, InputEvent, Node};
 
+use crate::character_controller::CharacterBodyController;
+
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct State {
@@ -10,6 +12,8 @@ pub struct State {
     parent_node: Option<Gd<CharacterBody3D>>,
     #[var]
     animation_player: Option<Gd<AnimationPlayer>>,
+    #[var]
+    controller: Option<Gd<CharacterBodyController>>,
     base: Base<Node>
 }
 
@@ -21,6 +25,7 @@ impl INode for State {
             animation_name: "".into(), 
             parent_node: None, 
             animation_player: None,
+            controller: None,
             base
         }
     }
@@ -30,9 +35,10 @@ impl INode for State {
 impl State {
 
     #[func(virtual)]
-    pub fn set_parameters(&mut self, input_node: Option<Gd<CharacterBody3D>>, animation_player_node: Option<Gd<AnimationPlayer>>) {
+    pub fn set_parameters(&mut self, input_node: Option<Gd<CharacterBody3D>>, animation_player_node: Option<Gd<AnimationPlayer>>, character_controller_node: Option<Gd<CharacterBodyController>>) {
         self.parent_node = input_node;
         self.animation_player = animation_player_node;
+        self.controller = character_controller_node;
     }
 
     #[func(virtual)]

@@ -14,16 +14,14 @@ func _exit() -> void:
 	pass
 	
 func _process_physics(delta: float) -> State:
-	parent_node.velocity.y -= parent_node.fall_gravity
+	
+	var velocity = controller._get_horizontal_movement() * parent_node.speed
+	velocity.y -= parent_node.fall_gravity
+	parent_node.velocity = velocity
 	
 	#if parent_node.velocity.y < 0:
 		#return fall_state
-	
-	var x_movement = Input.get_axis('left', 'right') * parent_node.speed
-	var z_movement = Input.get_axis('forward', 'back') * parent_node.speed
 
-	parent_node.velocity.x = x_movement
-	parent_node.velocity.z = z_movement
 	parent_node.move_and_slide()
 	
 	if parent_node.is_on_floor():

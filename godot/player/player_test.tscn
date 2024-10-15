@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://b8dtgwisdmayg"]
+[gd_scene load_steps=11 format=3 uid="uid://b8dtgwisdmayg"]
 
 [ext_resource type="Script" path="res://player/scripts/idle.gd" id="1_4smtp"]
 [ext_resource type="Script" path="res://player/scripts/move.gd" id="2_4rspm"]
+[ext_resource type="Script" path="res://player/scripts/player_controller.gd" id="3_kq0rq"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_xx7kh"]
 
@@ -142,3 +143,6 @@ move_state = NodePath("../Move")
 animation_name = "move"
 script = ExtResource("2_4rspm")
 idle_state = NodePath("../Idle")
+
+[node name="CharacterBodyController" type="CharacterBodyController" parent="."]
+script = ExtResource("3_kq0rq")

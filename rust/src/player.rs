@@ -2,6 +2,7 @@ use godot::obj::WithBaseField;
 use godot::prelude::*;
 use godot::classes::{AnimationPlayer, CharacterBody3D, ICharacterBody3D, InputEvent};
 
+use crate::character_controller::CharacterBodyController;
 use crate::state_machine::StateMachine;
 
 #[derive(GodotClass)]
@@ -9,6 +10,7 @@ use crate::state_machine::StateMachine;
 pub struct Player {
     animations: Option<Gd<AnimationPlayer>>,
     state_machine: Option<Gd<StateMachine>>,
+    character_controller: Option<Gd<CharacterBodyController>>,
 
     // jump variables
     jump_speed: f32,
@@ -40,6 +42,7 @@ impl ICharacterBody3D for Player {
         Self {
             animations: None,
             state_machine: None,
+            character_controller: None,
 
             // jump variables
             jump_speed: 0.0,
@@ -59,22 +62,20 @@ impl ICharacterBody3D for Player {
     }
 
     fn ready(&mut self) {
-        {
-            let _node = self.base_mut().get_node_as("AnimationPlayer");
-            self.animations = Some(_node);
-        }
 
-        {
-            let _node = self.base_mut().get_node_as("StateMachine");
-            self.state_machine = Some(_node);
-        }
+        let _node = self.base_mut().get_node_as("AnimationPlayer");
+        self.animations = Some(_node);
 
-        {
-            let _self = self.base().clone();
-            match self.state_machine.as_mut() {
-                Some(state_machine) => {state_machine.bind_mut().initialize(_self.cast(), self.animations.clone())},
-                None => {godot_error!("state machine not found")},
-            }
+        let _node = self.base_mut().get_node_as("StateMachine");
+        self.state_machine = Some(_node);
+
+        let _node = self.base_mut().get_node_as("CharacterBodyController");
+        self.character_controller = Some(_node);
+
+        let _self = self.base().clone();
+        match self.state_machine.as_mut() {
+            Some(state_machine) => {state_machine.bind_mut().initialize(_self.cast(), self.animations.clone(), self.character_controller.clone())},
+            None => {godot_error!("state machine not found")},
         }
 
         self.calculate_movement_params();
